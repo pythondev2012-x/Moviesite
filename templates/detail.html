@@ -1,0 +1,484 @@
+{% extends 'base_site.html' %}
+{% load static %}
+
+{% block title %}{{ movie.title }} — CineUZ{% endblock %}
+
+{% block description %}{{ movie.description|truncatechars:160 }}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/detail.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Detail Hero (Backdrop) ─────────────────────────── -->
+<div class="detail-hero" id="detailHero">
+  <div class="backdrop-blur {% if movie.poster %}has-poster{% else %}no-poster{% endif %}"
+       id="backdropEl"
+       {% if movie.poster %}style="background-image: url('{{ movie.poster.url }}')"{% endif %}
+  ></div>
+  <div class="backdrop-fade"></div>
+</div>
+
+<!-- ── Main Detail Layout ─────────────────────────────── -->
+<div class="detail-layout">
+  <div class="container">
+    <div class="row g-4 g-lg-5 align-items-start">
+
+      <!-- Poster Column -->
+      <div class="col-sm-5 col-md-4 col-lg-3">
+        <div class="poster-wrap">
+          {% if movie.poster %}
+            <img src="{{ movie.poster.url }}" alt="{{ movie.title }} poster">
+          {% else %}
+            <div class="poster-placeholder">
+              <i class="bi bi-camera-video"></i>
+              <span>Poster yo'q</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Info Column -->
+      <div class="col-sm-7 col-md-8 col-lg-9">
+        <div class="hero-inner">
+
+          <!-- Badges -->
+          <div class="movie-eyebrow">
+            {% if movie.genre %}
+              <span class="badge-genre">{{ movie.genre }}</span>
+            {% endif %}
+            {% if movie.year %}
+              <span class="badge-year">{{ movie.year }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Title -->
+          <h1 class="movie-main-title">{{ movie.title }}</h1>
+
+          <!-- Stats row -->
+          <div class="movie-stats-row">
+            {% if movie.rating %}
+            <div class="stat-chip rating-chip">
+              <i class="bi bi-star-fill"></i>
+              <span>{{ movie.rating }}</span>
+            </div>
+            <span class="stat-divider"></span>
+            {% endif %}
+
+            <div class="stat-chip">
+              <i class="bi bi-eye"></i>
+              <span>{{ movie.views }} marta ko'rilgan</span>
+            </div>
+
+            <span class="stat-divider"></span>
+            <div class="stat-chip">
+              <i class="bi bi-heart-fill"></i>
+              <span>{{ movie.likes }} ta like</span>
+            </div>
+
+            {% if movie.duration %}
+            <span class="stat-divider"></span>
+            <div class="stat-chip">
+              <i class="bi bi-clock"></i>
+              <span>{{ movie.duration }} daq</span>
+            </div>
+            {% endif %}
+
+            {% if movie.language %}
+            <span class="stat-divider"></span>
+            <div class="stat-chip">
+              <i class="bi bi-translate"></i>
+              <span>{{ movie.language }}</span>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Short description -->
+          {% if movie.description %}
+          <p class="movie-desc">{{ movie.description|truncatechars:220 }}</p>
+          {% endif %}
+
+          <!-- CTAs -->
+          <div class="detail-cta">
+            <a href="#player-section" class="btn-play" id="watchBtn">
+              <i class="bi bi-play-fill"></i>
+              Tomosha qilish
+            </a>
+            <button class="btn-outline-cine" id="shareBtn" onclick="shareMovie()">
+              <i class="bi bi-share"></i>
+              Ulashish
+            </button>
+            {% if user.is_authenticated %}
+            <form method="post" action="{% url 'toggle_like' movie.pk %}" style="display:inline-block;">
+              {% csrf_token %}
+              <button type="submit" class="btn-outline-cine" style="margin-left:10px;">
+                <i class="bi {% if is_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                {% if is_liked %}Sevimlidan olib tashlash{% else %}Sevimlilarga qo'shish{% endif %}
+              </button>
+            </form>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /row -->
+
+    <!-- ── Video Player ─────────────────────────────────── -->
+    <div class="player-section" id="player-section">
+      <div class="section-label">
+        <i class="bi bi-play-circle" style="color:var(--accent);"></i>
+        Tomosha
+      </div>
+
+      <div class="player-wrap">
+        <video
+          id="mainVideo"
+          controls
+          preload="metadata"
+          playsinline
+          poster="{% if movie.poster %}{{ movie.poster.url }}{% endif %}"
+        >
+          <source src="{% url 'stream_video' movie.pk %}" type="video/mp4">
+          <p style="color:var(--text-muted); padding:20px; text-align:center;">
+            Brauzeringiz video formatini qo'llab-quvvatlamaydi.
+          </p>
+        </video>
+        <div class="player-overlay-hint">
+          <i class="bi bi-fullscreen" style="margin-right:4px;"></i> To'liq ekran uchun F tugmasi
+          <span style="margin: 0 8px;">•</span>
+          <i class="bi bi-pause" style="margin-right:4px;"></i> Play/Pause uchun Space
+          <span style="margin: 0 8px;">•</span>
+          <i class="bi bi-volume-up" style="margin-right:4px;"></i> Ovoz uchun M
+          <span style="margin: 0 8px;">•</span>
+          <i class="bi bi-skip-forward" style="margin-right:4px;"></i> O'tish uchun ← →
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-side-card">
+      <div class="section-label">
+        <i class="bi bi-person-bounding-box" style="color:var(--accent);"></i>
+        Aktyorlar va rejissyorlar
+      </div>
+      <div class="people-grid">
+        {% if movie.actors.all %}
+        <div>
+          <h3>Aktyorlar</h3>
+          <ul>
+            {% for actor in movie.actors.all %}
+            <li>{{ actor.name }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+        {% if movie.rejissor.all %}
+        <div>
+          <h3>Rejissyorlar</h3>
+          <ul>
+            {% for director in movie.rejissor.all %}
+            <li>{{ director.name }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <section class="ad-banner my-4">
+      <div class="ad-banner-card">
+        <div>
+          <span class="ad-label">Reklama</span>
+          <h3>Bu yerga reklama joylashtiriladi</h3>
+          <p>Brending yoki maxsus takliflar uchun qulay banner maydon.</p>
+        </div>
+        <a href="{% url 'movie_list' %}" class="btn-primary-cine">Barcha kinolar</a>
+      </div>
+    </section>
+
+    <!-- ── Info Tabs ────────────────────────────────────── -->
+    <div class="info-tabs">
+      <div class="tab-nav" role="tablist">
+        <button class="tab-btn active" role="tab" data-tab="tab-desc" aria-selected="true">
+          Tavsif
+        </button>
+        <button class="tab-btn" role="tab" data-tab="tab-comments" aria-selected="false">
+          Izohlar
+          {% if comments %}
+            <span style="color:var(--accent); margin-left:4px; font-size:0.8em;">({{ comments|length }})</span>
+          {% endif %}
+        </button>
+      </div>
+
+      <!-- Description Tab -->
+      <div class="tab-pane active" id="tab-desc">
+        {% if movie.description %}
+          <div class="description-text">
+            {{ movie.description|linebreaks }}
+          </div>
+        {% else %}
+          <p style="color:var(--text-muted); font-size:0.88rem;">Tavsif qo'shilmagan.</p>
+        {% endif %}
+      </div>
+
+      <!-- Comments Tab -->
+      <div class="tab-pane" id="tab-comments">
+
+        <!-- Existing comments -->
+        {% if comments %}
+        <div class="comments-list" id="commentsList">
+          {% for comment in comments %}
+          <div class="comment-card">
+            <div class="comment-header">
+              <div class="comment-avatar">{{ comment.name|first|upper }}</div>
+              <div>
+                <div class="comment-name">{{ comment.name }}</div>
+                {% if comment.created_at %}
+                <div class="comment-date">{{ comment.created_at|date:"d M Y" }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <p class="comment-text">{{ comment.text }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-comments" id="commentsList">
+          <i class="bi bi-chat-square-text"></i>
+          <p>Hali izoh qoldirilmagan. Birinchi bo'ling!</p>
+        </div>
+        {% endif %}
+
+        <!-- Comment form -->
+        <div class="comment-form-wrap">
+          <div class="form-title">
+            <i class="bi bi-pencil-square"></i>
+            Izoh qoldiring
+          </div>
+
+          <form method="post" action="{% url 'movie_detail' movie.pk %}#tab-comments" id="commentForm">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label-cine">Ismingiz</label>
+                <input
+                  type="text"
+                  name="name"
+                  class="cine-input"
+                  placeholder="Ismingizni kiriting"
+                  required
+                  maxlength="80"
+                >
+              </div>
+              <div class="col-12">
+                <label class="form-label-cine">Izoh</label>
+                <textarea
+                  name="text"
+                  class="cine-textarea"
+                  placeholder="Kino haqida fikringizni yozing..."
+                  required
+                  maxlength="1000"
+                ></textarea>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn-submit-comment">
+                  <i class="bi bi-send"></i>
+                  Yuborish
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </div><!-- /tab-comments -->
+    </div><!-- /info-tabs -->
+
+  </div><!-- /container -->
+</div><!-- /detail-layout -->
+
+<!-- ── Related Movies ─────────────────────────────────── -->
+{% if releted_movie %}
+<div class="container">
+  <div class="related-section">
+    <div class="section-label">
+      <i class="bi bi-grid-3x3" style="color:var(--accent);"></i>
+      O'xshash Kinolar
+    </div>
+
+    <div class="related-grid">
+      {% for rm in releted_movie %}
+      {% if rm.pk != movie.pk %}
+      <a class="movie-card" href="{% url 'movie_detail' rm.pk %}">
+        <div class="rc-poster">
+          {% if rm.poster %}
+            <img src="{{ rm.poster.url }}" alt="{{ rm.title }}" loading="lazy">
+          {% else %}
+            <div class="rc-placeholder"><i class="bi bi-camera-video"></i></div>
+          {% endif %}
+          <div class="card-overlay"></div>
+          <div class="card-play-btn"><i class="bi bi-play-fill"></i></div>
+        </div>
+        <div class="rc-info">
+          <div class="rc-title" title="{{ rm.title }}">{{ rm.title }}</div>
+          <div class="rc-meta">
+            {% if rm.year %}{{ rm.year }}{% endif %}
+            {% if rm.year and rm.genre %} · {% endif %}
+            {% if rm.genre %}{{ rm.genre }}{% endif %}
+          </div>
+        </div>
+      </a>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% block extra_js %}
+<script>
+  // ── Tab switching ──────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      document.getElementById(target).classList.add('active');
+    });
+  });
+
+  // ── Smooth scroll to player on "Tomosha" click ────────
+  document.getElementById('watchBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    const player = document.getElementById('player-section');
+    if (player) {
+      player.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => {
+        const video = document.getElementById('mainVideo');
+        if (video) video.play().catch(() => {});
+      }, 600);
+    }
+  });
+
+  // ── Share ──────────────────────────────────────────────
+  function shareMovie() {
+    if (navigator.share) {
+      navigator.share({
+        title: '{{ movie.title|escapejs }} — CineUZ',
+        url: window.location.href
+      }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(window.location.href).then(() => {
+        const btn = document.getElementById('shareBtn');
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Nusxalandi!';
+        btn.style.borderColor = 'var(--accent)';
+        btn.style.color = 'var(--accent)';
+        setTimeout(() => {
+          btn.innerHTML = original;
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 2200);
+      });
+    }
+  }
+
+  // ── Auto-open comments tab if POST redirect ────────────
+  if (window.location.hash === '#tab-comments') {
+    document.querySelector('[data-tab="tab-comments"]')?.click();
+    document.getElementById('tab-comments')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── Video Player Keyboard Shortcuts ───────────────────
+  const video = document.getElementById('mainVideo');
+
+  if (video) {
+    document.addEventListener('keydown', function(e) {
+      // Don't trigger if user is typing in an input field or textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+        return;
+      }
+
+      // Only trigger shortcuts when video is in viewport or focused
+      const videoRect = video.getBoundingClientRect();
+      const isInViewport = videoRect.top < window.innerHeight && videoRect.bottom > 0;
+
+      if (!isInViewport && document.activeElement !== video) {
+        return;
+      }
+
+      switch(e.key.toLowerCase()) {
+        case ' ':
+          e.preventDefault();
+          if (video.paused) {
+            video.play();
+          } else {
+            video.pause();
+          }
+          break;
+
+        case 'f':
+          e.preventDefault();
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else if (video.requestFullscreen) {
+            video.requestFullscreen();
+          } else if (video.webkitRequestFullscreen) {
+            video.webkitRequestFullscreen();
+          } else if (video.webkitEnterFullscreen) {
+            video.webkitEnterFullscreen();
+          }
+          break;
+
+        case 'm':
+          e.preventDefault();
+          video.muted = !video.muted;
+          break;
+
+        case 'arrowleft':
+          e.preventDefault();
+          video.currentTime = Math.max(0, video.currentTime - 10);
+          break;
+
+        case 'arrowright':
+          e.preventDefault();
+          video.currentTime = Math.min(video.duration, video.currentTime + 10);
+          break;
+
+        case 'arrowup':
+          e.preventDefault();
+          video.volume = Math.min(1, video.volume + 0.1);
+          break;
+
+        case 'arrowdown':
+          e.preventDefault();
+          video.volume = Math.max(0, video.volume - 0.1);
+          break;
+
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+          e.preventDefault();
+          const percent = parseInt(e.key) * 10;
+          video.currentTime = (video.duration * percent) / 100;
+          break;
+      }
+    });
+  }
+</script>
+{% endblock %}
+
+{% endblock %}

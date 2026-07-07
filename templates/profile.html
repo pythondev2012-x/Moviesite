@@ -1,0 +1,299 @@
+{% extends 'base_site.html' %}
+
+{% block title %}CineUZ — Profil{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+      padding-top: 100px;
+      padding-bottom: 50px;
+    }
+    .profile-header {
+      background: linear-gradient(135deg, var(--accent) 0%, #1a1a2e 100%);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent) 0%, #ff6b6b 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: white;
+      margin-bottom: 20px;
+      border: 4px solid rgba(255,255,255,0.2);
+      overflow: hidden;
+    }
+    .profile-name {
+      font-size: 2rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 5px;
+    }
+    .profile-email {
+      color: rgba(255,255,255,0.7);
+      font-size: 1rem;
+    }
+    .profile-join-date {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+    .stats-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .stats-card:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-5px);
+    }
+    .stats-icon {
+      font-size: 2.5rem;
+      color: var(--accent);
+      margin-bottom: 15px;
+    }
+    .stats-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 5px;
+    }
+    .stats-label {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+    }
+    .section-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title i {
+      color: var(--accent);
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.95rem;
+    }
+    .info-value {
+      color: white;
+      font-weight: 500;
+    }
+    .btn-profile {
+      padding: 12px 30px;
+      border-radius: 10px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border: none;
+    }
+    .btn-profile-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-profile-primary:hover {
+      background: #ff4757;
+      transform: translateY(-2px);
+    }
+    .btn-profile-secondary {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .btn-profile-secondary:hover {
+      background: rgba(255,255,255,0.2);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<main class="container profile-container">
+  <div class="profile-header">
+    <div class="row align-items-center">
+      <div class="col-md-3 text-center">
+        <div class="profile-avatar">
+          {% if profile.profile_picture and profile.profile_picture.url %}
+            <img src="{{ profile.profile_picture.url }}" alt="Profil rasmi" style="width:100%; height:100%; object-fit:cover;">
+          {% else %}
+            <i class="bi bi-person"></i>
+          {% endif %}
+        </div>
+        <form method="post" enctype="multipart/form-data" class="mt-2">
+          {% csrf_token %}
+          <label class="btn btn-profile-secondary btn-profile btn-sm w-100">
+            <i class="bi bi-camera"></i> Rasmni o'zgartirish
+            <input type="file" name="profile_picture" accept="image/*" hidden>
+          </label>
+          <button type="submit" class="btn btn-profile-primary btn-profile btn-sm w-100 mt-2">
+            <i class="bi bi-save"></i> Saqlash
+          </button>
+        </form>
+      </div>
+      <div class="col-md-9">
+        <h1 class="profile-name">{{ user.username }}</h1>
+        <p class="profile-email">{{ user.email }}</p>
+        <p class="profile-join-date">
+          <i class="bi bi-calendar3"></i>
+          Ro'yxatdan o'tgan: {{ user.date_joined|date:"d F Y" }}
+        </p>
+        <div class="mt-3">
+          <a href="{% url 'home' %}" class="btn btn-profile-primary btn-profile">
+            <i class="bi bi-house"></i> Bosh sahifa
+          </a>
+          <a href="{% url 'logout' %}" class="btn btn-profile-secondary btn-profile ms-2">
+            <i class="bi bi-box-arrow-right"></i> Chiqish
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="stats-card">
+        <div class="stats-icon">
+          <i class="bi bi-eye"></i>
+        </div>
+        <div class="stats-number">{{ stats.watched }}</div>
+        <div class="stats-label">Jami ko'rilgan kinolar</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="stats-card">
+        <div class="stats-icon">
+          <i class="bi bi-chat-dots"></i>
+        </div>
+        <div class="stats-number">{{ stats.comments }}</div>
+        <div class="stats-label">Izohlar</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="stats-card">
+        <div class="stats-icon">
+          <i class="bi bi-heart"></i>
+        </div>
+        <div class="stats-number">{{ stats.favorites }}</div>
+        <div class="stats-label">Sevimlilar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h2 class="section-title">
+      <i class="bi bi-info-circle"></i>
+      Hisob ma'lumotlari
+    </h2>
+    <div class="info-row">
+      <span class="info-label">Foydalanuvchi nomi</span>
+      <span class="info-value">{{ user.username }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Email</span>
+      <span class="info-value">{{ user.email }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Ro'yxatdan o'tgan sana</span>
+      <span class="info-value">{{ user.date_joined|date:"d F Y, H:i" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Oxigi kirish</span>
+      <span class="info-value">{{ user.last_login|date:"d F Y, H:i" }}</span>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h2 class="section-title">
+      <i class="bi bi-lightning"></i>
+      Tezkor amallar
+    </h2>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <a href="{% url 'password_reset' %}" class="btn btn-profile-secondary btn-profile w-100">
+          <i class="bi bi-key"></i> Parolni o'zgartirish
+        </a>
+      </div>
+      <div class="col-md-6 mb-3">
+        <a href="{% url 'home' %}" class="btn btn-profile-secondary btn-profile w-100">
+          <i class="bi bi-film"></i> Kinolarni ko'rish
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if liked_movies %}
+  <div class="section-card">
+    <h2 class="section-title">
+      <i class="bi bi-heart-fill"></i>
+      Sevimli kinolar
+    </h2>
+    <div class="row g-3">
+      {% for movie in liked_movies %}
+      <div class="col-md-6">
+        <a href="{% url 'movie_detail' movie.pk %}" class="d-flex align-items-center gap-3 text-decoration-none" style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; color: white;">
+          {% if movie.poster %}
+            <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" style="width:70px; height:100px; object-fit:cover; border-radius:10px;">
+          {% else %}
+            <div style="width:70px; height:100px; border-radius:10px; background: rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;">
+              <i class="bi bi-camera-video"></i>
+            </div>
+          {% endif %}
+          <div>
+            <div class="fw-bold">{{ movie.title }}</div>
+            <div class="text-muted small">{{ movie.genre }}</div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</main>
+
+{% block extra_js %}
+<script>
+  const nav = document.getElementById('mainNav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+</script>
+{% endblock %}
+
+{% endblock %}

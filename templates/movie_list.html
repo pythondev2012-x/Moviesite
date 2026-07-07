@@ -1,0 +1,131 @@
+{% extends 'base_site.html' %}
+{% load static %}
+
+{% block title %}Kinolar ro'yxati — CineUZ{% endblock %}
+{% block description %}Barcha kinolarni janr, rejissor, aktyor va yil bo'yicha ko'ring.{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/movie_list.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="movie-list-page">
+  <div class="container py-5">
+    <div class="page-heading">
+      <div>
+        <span class="section-label">Kinolar ro'yxati</span>
+        <h1>Eng yaxshi kinolarni bir joyda toping</h1>
+        <p>Qidiruv, janr, rejissor, aktyor va yil bo'yicha tezkor filtrlar bilan tanlang.</p>
+      </div>
+      <a href="{% url 'home' %}" class="btn-outline-cine">Bosh sahifaga</a>
+    </div>
+
+    <section class="ad-banner my-4">
+      <div class="ad-banner-card">
+        <div>
+          <span class="ad-label">Reklama</span>
+          <h3>Bu yerga reklama joylashtirilishi mumkin</h3>
+          <p>Maxsus takliflar yoki brending uchun qulay banner maydon.</p>
+        </div>
+        <a href="{% url 'home' %}" class="btn-primary-cine">Bosh sahifaga o'tish</a>
+      </div>
+    </section>
+
+    <form class="filters-card" method="get" action="{% url 'movie_list' %}">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label-cine">Qidiruv</label>
+          <input type="text" name="q" class="cine-input" value="{{ q }}" placeholder="Kino nomi...">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label-cine">Janr</label>
+          <select name="genre" class="cine-input">
+            <option value="">Barchasi</option>
+            {% for g in genre %}
+            <option value="{{ g.id }}" {% if selected_genre == g.id|stringformat:'s' %}selected{% endif %}>{{ g.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label-cine">Yil</label>
+          <select name="year" class="cine-input">
+            <option value="">Barchasi</option>
+            {% for y in year %}
+            <option value="{{ y }}" {% if selected_year == y|stringformat:'s' %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label-cine">Aktyor</label>
+          <select name="actors" class="cine-input">
+            <option value="">Barchasi</option>
+            {% for a in actors %}
+            <option value="{{ a.id }}" {% if selected_actors == a.id|stringformat:'s' %}selected{% endif %}>{{ a.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-1">
+          <label class="form-label-cine">Rejissor</label>
+          <select name="rejisor" class="cine-input">
+            <option value="">Barchasi</option>
+            {% for r in rejisor %}
+            <option value="{{ r.id }}" {% if selected_rejisor == r.id|stringformat:'s' %}selected{% endif %}>{{ r.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <div class="d-flex gap-2 w-100">
+            <button type="submit" class="btn-primary-cine flex-grow-1" title="Filtrlash">Filtr</button>
+            {% if q or selected_genre or selected_year or selected_actors or selected_rejisor %}
+              <a href="{% url 'movie_list' %}" class="btn-clear-cine" title="Filtrlarni tozalash">
+                <i class="bi bi-trash"></i>
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="section-header mt-4">
+      <h2 class="section-title">Natijalar <span class="accent-dot">.</span></h2>
+      <span class="section-count">{{ movie|length }} ta kino</span>
+    </div>
+
+    {% if movie %}
+    <div class="movie-grid" role="list">
+      {% for film in movie %}
+      <a class="movie-card" href="{% url 'movie_detail' film.pk %}" role="listitem" aria-label="{{ film.title }}">
+        <div class="card-poster">
+          {% if film.poster %}
+            <img src="{{ film.poster.url }}" alt="{{ film.title }}" loading="lazy">
+          {% else %}
+            <div class="card-poster-placeholder">
+              <i class="bi bi-camera-video"></i>
+              <span>Poster yo'q</span>
+            </div>
+          {% endif %}
+          <div class="card-overlay"></div>
+          <div class="card-play-btn"><i class="bi bi-play-fill"></i></div>
+        </div>
+        <div class="card-body-cine">
+          <div class="card-title-cine" title="{{ film.title }}">{{ film.title }}</div>
+          <div class="card-meta-cine">
+            {% if film.year %}<span>{{ film.year }}</span><span class="meta-sep"></span>{% endif %}
+            <span class="genre-tag">{{ film.genre.name }}</span>
+            {% if film.likes %}<span class="meta-sep"></span><span><i class="bi bi-heart-fill" style="font-size:0.7rem;"></i> {{ film.likes }}</span>{% endif %}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="bi bi-film"></i></div>
+      <div class="empty-state-title">Hech narsa topilmadi</div>
+      <p class="empty-state-desc">Boshqa filterni tanlang yoki bosh sahifaga qaytib ko'ring.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
